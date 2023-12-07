@@ -16,9 +16,9 @@ public interface TokenDataSource {
 
     List<TokenQuote> getHistoricQuotes(String tokenAddress, long from, long to, CurrencyType currencyType);
 
-    default Optional<TokenQuote> getCurrentQuote(String tokenAddress) {
-        return getCurrentQuote(tokenAddress, DEFAULT_CURRENCY_TYPE);
+    default List<TokenQuote> getCurrentQuotes(List<String> tokenAddresses, String tokenAddress) {
+        return getCurrentQuotes(tokenAddresses, DEFAULT_CURRENCY_TYPE);
     }
 
-    Optional<TokenQuote> getCurrentQuote(String tokenAddress, CurrencyType currencyType);
+    List<TokenQuote> getCurrentQuotes(List<String> tokenAddress, CurrencyType currencyType);
 }

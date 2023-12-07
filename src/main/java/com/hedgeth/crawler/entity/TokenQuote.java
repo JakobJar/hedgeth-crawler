@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 @Getter
 public class TokenQuote {
 
+    private final String tokenAddress;
     private final long time;
     private final BigDecimal price;
 }
