@@ -4,9 +4,8 @@ import com.hedgeth.crawler.entity.CurrencyType;
 import com.hedgeth.crawler.entity.TokenQuote;
 
 import java.util.List;
-import java.util.Optional;
 
-public interface TokenDataSource {
+public interface APIDataSource {
 
     CurrencyType DEFAULT_CURRENCY_TYPE = CurrencyType.USD;
 

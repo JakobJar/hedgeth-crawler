@@ -6,22 +6,19 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hedgeth.crawler.entity.CurrencyType;
 import com.hedgeth.crawler.entity.TokenQuote;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
-public class CoinGeckoDataSource implements TokenDataSource {
+public class CoinGeckoDataSource implements APIDataSource {
 
     private static final String COINGECKO_API_URL = "https://api.coingecko.com/api/v3";
 
