@@ -16,6 +16,7 @@ import java.net.http.HttpResponse;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class CoinGeckoDataSource implements APIDataSource {
@@ -35,6 +36,11 @@ public class CoinGeckoDataSource implements APIDataSource {
         this.gson = gson;
         this.apiKey = apiKey;
         this.network = network;
+
+        if (this.apiKey.isEmpty())
+            log.warn("CoinGecko API key is not set.");
+        if (this.network.isEmpty())
+            throw new IllegalArgumentException("CoinGecko network has to be set.");
     }
 
     @Override
@@ -43,16 +49,12 @@ public class CoinGeckoDataSource implements APIDataSource {
                 "/contract/" + tokenAddress +
                 "/market_chart/range?vs_currency=" + currencyType.getCoinGeckoName() +
                 "&from=" + from +
-                "&to=" + to;
-        var request = createRequestBuilder(path).GET().build();
-        try {
-            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200)
-                return parseHistoricQuotes(response.body(), tokenAddress);
-        } catch (IOException | InterruptedException e) {
-            log.error("Error while getting historic quotes", e);
-        }
-        return Collections.emptyList();
+                "&to=" + to +
+                "precision=" + DEFAULT_PRECISION;
+        var response = sendRequest(path);
+
+        return response.map(rawJson -> parseHistoricQuotes(rawJson, tokenAddress))
+                .orElse(Collections.emptyList());
     }
 
     private List<TokenQuote> parseHistoricQuotes(String rawJson, String tokenAddress) {
@@ -70,29 +72,38 @@ public class CoinGeckoDataSource implements APIDataSource {
     @Override
     public List<TokenQuote> getCurrentQuotes(List<String> tokenAddresses, CurrencyType currencyType) {
         var path = "/simple/token_price/" + this.network +
-                "?token_addresses=" + String.join(",", tokenAddresses) +
-                "&vs_currency=" + currencyType.getCoinGeckoName();
-        var request = createRequestBuilder(path).GET().build();
-        try {
-            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200)
-                return parseCurrentQuotes(response.body());
-        } catch (IOException | InterruptedException e) {
-            log.error("Error while getting current quotes", e);
-        }
-        return Collections.emptyList();
+                "?contract_addresses=" + String.join(",", tokenAddresses) +
+                "&vs_currencies=" + currencyType.getCoinGeckoName() +
+                "&precision=" + DEFAULT_PRECISION;
+        var response = sendRequest(path);
+
+        return response.map(rawJson -> parseCurrentQuotes(rawJson, currencyType))
+                .orElse(Collections.emptyList());
     }
 
-    private List<TokenQuote> parseCurrentQuotes(String rawJson) {
+    private List<TokenQuote> parseCurrentQuotes(String rawJson, CurrencyType currencyType) {
         var quotes = new LinkedList<TokenQuote>();
         var json = this.gson.fromJson(rawJson, JsonObject.class);
         json.entrySet().forEach(entry -> {
             var tokenAddress = entry.getKey();
-            var price = entry.getValue().getAsJsonObject().get("usd").getAsBigDecimal();
+            var price = entry.getValue().getAsJsonObject().get(currencyType.getCoinGeckoName()).getAsBigDecimal();
             var quote = new TokenQuote(tokenAddress, System.currentTimeMillis(), price);
             quotes.add(quote);
         });
         return quotes;
+    }
+
+    private Optional<String> sendRequest(String path) {
+        var request = createRequestBuilder(path).GET().build();
+        try {
+            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() / 100 == 2)
+                return Optional.of(response.body());
+            log.error("Error while sending request: " + response.body());
+        } catch (IOException | InterruptedException e) {
+            log.error("Error while sending request", e);
+        }
+        return Optional.empty();
     }
 
     private HttpRequest.Builder createRequestBuilder(String path) {
