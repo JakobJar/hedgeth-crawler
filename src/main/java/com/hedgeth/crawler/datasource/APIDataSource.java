@@ -8,7 +8,7 @@ import java.util.List;
 public interface APIDataSource {
 
     CurrencyType DEFAULT_CURRENCY_TYPE = CurrencyType.USD;
-    int DEFAULT_PRECISION = 18;
+    int DEFAULT_PRECISION = 2;
 
     default List<TokenQuote> getHistoricQuotes(String tokenAddress, long from, long to) {
         return getHistoricQuotes(tokenAddress, from, to, DEFAULT_CURRENCY_TYPE);
