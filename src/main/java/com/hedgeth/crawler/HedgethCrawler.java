@@ -3,6 +3,7 @@ package com.hedgeth.crawler;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Stage;
+import com.hedgeth.crawler.database.DatabaseModule;
 import com.hedgeth.crawler.datasource.DataSourceModule;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,6 @@ public final class HedgethCrawler extends AbstractModule {
 
     public void start() {
         var stage = Stage.valueOf(System.getenv().getOrDefault("STAGE", "PRODUCTION"));
-        var injector = Guice.createInjector(stage, this, new DataSourceModule());
+        var injector = Guice.createInjector(stage, this, new DataSourceModule(), new DatabaseModule());
     }
 }
