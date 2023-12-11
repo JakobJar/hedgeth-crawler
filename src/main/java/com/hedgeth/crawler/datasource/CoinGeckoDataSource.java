@@ -3,7 +3,6 @@ package com.hedgeth.crawler.datasource;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hedgeth.crawler.entity.CurrencyType;
 import com.hedgeth.crawler.entity.TokenQuote;
 import lombok.extern.slf4j.Slf4j;
@@ -29,17 +28,15 @@ public class CoinGeckoDataSource implements APIDataSource {
     private final String network;
 
     @Inject
-    public CoinGeckoDataSource(HttpClient httpClient, Gson gson,
-                               @Named("COINGECKO_API_KEY") String apiKey,
-                               @Named("COINGECKO_NETWORK") String network) {
+    public CoinGeckoDataSource(HttpClient httpClient, Gson gson) {
         this.httpClient = httpClient;
         this.gson = gson;
-        this.apiKey = apiKey;
-        this.network = network;
+        this.apiKey = System.getenv("COINGECKO_API_KEY");
+        this.network = System.getenv("COINGECKO_NETWORK");
 
-        if (this.apiKey.isEmpty())
+        if (this.apiKey == null || this.apiKey.isEmpty())
             log.warn("CoinGecko API key is not set.");
-        if (this.network.isEmpty())
+        if (this.network == null || this.network.isEmpty())
             throw new IllegalArgumentException("CoinGecko network has to be set.");
     }
 
