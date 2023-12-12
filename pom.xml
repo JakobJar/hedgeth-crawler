@@ -20,6 +20,11 @@
             <artifactId>influxdb-client-java</artifactId>
             <version>6.10.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.web3j</groupId>
+            <artifactId>core</artifactId>
+            <version>4.10.3</version>
+        </dependency>
 
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -99,6 +104,19 @@
                             <mainClass>com.hedgeth.crawler.HedgethCrawler</mainClass>
                         </manifest>
                     </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.web3j</groupId>
+                <artifactId>web3j-maven-plugin</artifactId>
+                <version>4.10.3</version>
+                <configuration>
+                    <abiSourceFiles>
+                        <directory>src/main/resources/abi</directory>
+                        <includes>
+                            <include>**/*.json</include>
+                        </includes>
+                    </abiSourceFiles>
                 </configuration>
             </plugin>
         </plugins>
