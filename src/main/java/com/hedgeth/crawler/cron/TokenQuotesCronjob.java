@@ -1,6 +1,9 @@
 package com.hedgeth.crawler.cron;
 
 import com.google.inject.Inject;
+import com.hedgeth.crawler.converter.InfluxEntityConverter;
+import com.hedgeth.crawler.datasource.APIDataSource;
+import com.influxdb.client.InfluxDBClient;
 import lombok.extern.slf4j.Slf4j;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.model.IFund;
@@ -19,15 +22,21 @@ import java.util.stream.Collectors;
 public class TokenQuotesCronjob implements Runnable {
 
     private final IFundFactory fundFactory;
+    private final APIDataSource apiDataSource;
+    private final InfluxDBClient influxClient;
+    private final InfluxEntityConverter influxEntityConverter;
     private final Web3j web3j;
     private final TransactionManager transactionManager;
     private final ContractGasProvider contractGasProvider;
 
-    @Inject
-    public TokenQuotesCronjob(IFundFactory fundFactory, Web3j web3j,
-                              TransactionManager transactionManager,
+    public TokenQuotesCronjob(IFundFactory fundFactory, APIDataSource apiDataSource,
+                              InfluxDBClient influxClient, InfluxEntityConverter influxEntityConverter,
+                              Web3j web3j, TransactionManager transactionManager,
                               ContractGasProvider contractGasProvider) {
         this.fundFactory = fundFactory;
+        this.apiDataSource = apiDataSource;
+        this.influxClient = influxClient;
+        this.influxEntityConverter = influxEntityConverter;
         this.web3j = web3j;
         this.transactionManager = transactionManager;
         this.contractGasProvider = contractGasProvider;
@@ -41,10 +50,13 @@ public class TokenQuotesCronjob implements Runnable {
                 .map(Optional::get)
                 .collect(Collectors.toMap(IFund::getContractAddress, this::getFundTokenValues));
         // TODO: Store fund values in database.
-        fundValues.values().stream()
+        var tokenAddresses = fundValues.values().stream()
                 .flatMap(Collection::stream)
                 .map(assetValue -> assetValue.token)
-                .distinct();
+                .distinct()
+                .toList();
+        var tokenQuotes = this.apiDataSource.getCurrentQuotes(tokenAddresses);
+        System.out.println(tokenQuotes);
     }
 
     private List<Address> loadOpenFundAddresses() {
