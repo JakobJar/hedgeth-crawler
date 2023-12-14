@@ -5,21 +5,17 @@ import com.hedgeth.crawler.converter.InfluxEntityConverter;
 import com.hedgeth.crawler.datasource.APIDataSource;
 import com.influxdb.client.InfluxDBClient;
 import lombok.extern.slf4j.Slf4j;
-import org.web3j.abi.datatypes.Address;
 import org.web3j.model.IFund;
 import org.web3j.model.IFundFactory;
 import org.web3j.protocol.Web3j;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class TokenQuotesCronjob implements Runnable {
+public class TokenQuotesCronjob extends TimerTask {
 
     private final IFundFactory fundFactory;
     private final APIDataSource apiDataSource;
@@ -29,6 +25,7 @@ public class TokenQuotesCronjob implements Runnable {
     private final TransactionManager transactionManager;
     private final ContractGasProvider contractGasProvider;
 
+    @Inject
     public TokenQuotesCronjob(IFundFactory fundFactory, APIDataSource apiDataSource,
                               InfluxDBClient influxClient, InfluxEntityConverter influxEntityConverter,
                               Web3j web3j, TransactionManager transactionManager,
@@ -45,7 +42,7 @@ public class TokenQuotesCronjob implements Runnable {
     @Override
     public void run() {
         var fundValues = this.loadOpenFundAddresses().stream()
-                .map(address -> this.getFund(address.getValue()))
+                .map(this::getFund)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toMap(IFund::getContractAddress, this::getFundTokenValues));
@@ -53,13 +50,15 @@ public class TokenQuotesCronjob implements Runnable {
         var tokenAddresses = fundValues.values().stream()
                 .flatMap(Collection::stream)
                 .map(assetValue -> assetValue.token)
+                .map(address -> "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
                 .distinct()
                 .toList();
+        System.out.println(tokenAddresses);
         var tokenQuotes = this.apiDataSource.getCurrentQuotes(tokenAddresses);
         System.out.println(tokenQuotes);
     }
 
-    private List<Address> loadOpenFundAddresses() {
+    private List<String> loadOpenFundAddresses() {
         try {
             return this.fundFactory.getOpenFunds().send();
         } catch (Exception e) {
