@@ -12,10 +12,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 public class CoinGeckoDataSource implements APIDataSource {
@@ -67,7 +64,7 @@ public class CoinGeckoDataSource implements APIDataSource {
     }
 
     @Override
-    public List<TokenQuote> getCurrentQuotes(List<String> tokenAddresses, CurrencyType currencyType) {
+    public Map<String, TokenQuote> getCurrentQuotes(List<String> tokenAddresses, CurrencyType currencyType) {
         var path = "/simple/token_price/" + this.network +
                 "?contract_addresses=" + String.join(",", tokenAddresses) +
                 "&vs_currencies=" + currencyType.getCoinGeckoName() +
@@ -75,17 +72,17 @@ public class CoinGeckoDataSource implements APIDataSource {
         var response = sendRequest(path);
 
         return response.map(rawJson -> parseCurrentQuotes(rawJson, currencyType))
-                .orElse(Collections.emptyList());
+                .orElse(Collections.emptyMap());
     }
 
-    private List<TokenQuote> parseCurrentQuotes(String rawJson, CurrencyType currencyType) {
-        var quotes = new LinkedList<TokenQuote>();
+    private Map<String, TokenQuote> parseCurrentQuotes(String rawJson, CurrencyType currencyType) {
+        var quotes = new HashMap<String, TokenQuote>();
         var json = this.gson.fromJson(rawJson, JsonObject.class);
         json.entrySet().forEach(entry -> {
             var tokenAddress = entry.getKey();
             var price = entry.getValue().getAsJsonObject().get(currencyType.getCoinGeckoName()).getAsBigDecimal();
             var quote = new TokenQuote(tokenAddress, System.currentTimeMillis(), price);
-            quotes.add(quote);
+            quotes.put(quote.getTokenAddress(), quote);
         });
         return quotes;
     }

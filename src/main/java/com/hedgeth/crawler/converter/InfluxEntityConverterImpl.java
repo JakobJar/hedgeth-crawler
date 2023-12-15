@@ -18,7 +18,7 @@ public class InfluxEntityConverterImpl implements InfluxEntityConverter {
         return Point.measurement("fund_value")
                 .addTag("fund_address", fundAddress)
                 .addField("value", valueSum)
-                .time(time, WritePrecision.S);
+                .time(time, WritePrecision.MS);
     }
 
     @Override
@@ -28,6 +28,6 @@ public class InfluxEntityConverterImpl implements InfluxEntityConverter {
                 .addTag("token_address", tokenOwnership.getTokenQuote().getTokenAddress())
                 .addField("price", tokenOwnership.getTokenQuote().getPrice())
                 .addField("amount", tokenOwnership.getAmount())
-                .time(time, WritePrecision.S);
+                .time(time, WritePrecision.MS);
     }
 }

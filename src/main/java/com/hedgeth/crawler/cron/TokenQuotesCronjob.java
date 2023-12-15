@@ -3,7 +3,10 @@ package com.hedgeth.crawler.cron;
 import com.google.inject.Inject;
 import com.hedgeth.crawler.converter.InfluxEntityConverter;
 import com.hedgeth.crawler.datasource.APIDataSource;
+import com.hedgeth.crawler.entity.TokenQuote;
+import com.hedgeth.crawler.entity.ValuedTokenQuote;
 import com.influxdb.client.InfluxDBClient;
+import com.influxdb.client.WriteApiBlocking;
 import lombok.extern.slf4j.Slf4j;
 import org.web3j.model.IFund;
 import org.web3j.model.IFundFactory;
@@ -11,6 +14,7 @@ import org.web3j.protocol.Web3j;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,7 +23,7 @@ public class TokenQuotesCronjob extends TimerTask {
 
     private final IFundFactory fundFactory;
     private final APIDataSource apiDataSource;
-    private final InfluxDBClient influxClient;
+    private final WriteApiBlocking influxClient;
     private final InfluxEntityConverter influxEntityConverter;
     private final Web3j web3j;
     private final TransactionManager transactionManager;
@@ -32,7 +36,7 @@ public class TokenQuotesCronjob extends TimerTask {
                               ContractGasProvider contractGasProvider) {
         this.fundFactory = fundFactory;
         this.apiDataSource = apiDataSource;
-        this.influxClient = influxClient;
+        this.influxClient = influxClient.getWriteApiBlocking();
         this.influxEntityConverter = influxEntityConverter;
         this.web3j = web3j;
         this.transactionManager = transactionManager;
@@ -41,21 +45,51 @@ public class TokenQuotesCronjob extends TimerTask {
 
     @Override
     public void run() {
-        var fundValues = this.loadOpenFundAddresses().stream()
+        // Loading all open funds and their token values
+        Map<String, List<IFund.AssetValue>> fundAssets = this.loadOpenFundAddresses().stream()
                 .map(this::getFund)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toMap(IFund::getContractAddress, this::getFundTokenValues));
-        // TODO: Store fund values in database.
-        var tokenAddresses = fundValues.values().stream()
+                .filter(fund -> !fund.getContractAddress().equals("0x0000000000000000000000000000000000000000"))
+                .collect(Collectors.toMap(IFund::getContractAddress, this::getFundTokenAssets));
+
+        // Loading all distinct addresses of tokens that are present in any fund
+        List<String> tokenAddresses = fundAssets.values().stream()
                 .flatMap(Collection::stream)
                 .map(assetValue -> assetValue.token)
                 .map(address -> "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
                 .distinct()
                 .toList();
-        System.out.println(tokenAddresses);
-        var tokenQuotes = this.apiDataSource.getCurrentQuotes(tokenAddresses);
-        System.out.println(tokenQuotes);
+        log.debug("Fetched token addresses: {}", tokenAddresses);
+
+        // Loading quotes for all tokens
+        Map<String, TokenQuote> tokenQuotes = this.apiDataSource.getCurrentQuotes(tokenAddresses);
+        log.debug("Fetched token quotes: {}", tokenQuotes);
+
+        for (var entry : fundAssets.entrySet()) {
+            var fundAddress = entry.getKey();
+            var fundTokenAssets = entry.getValue();
+            var time = System.currentTimeMillis();
+
+            // Converting token values to valued token quotes
+            var valuedTokenQuotes = fundTokenAssets.stream()
+                    .map(tokenValue -> {
+                        var tokenQuote = tokenQuotes.get("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48");
+                        var amount = new BigDecimal(tokenValue.value, tokenValue.decimals.intValue());
+                        return new ValuedTokenQuote(tokenQuote, amount);
+                    })
+                    .toList();
+
+            // Writing token values and fund value to InfluxDB
+            for (ValuedTokenQuote valuedTokenQuote : valuedTokenQuotes) {
+                var tokenValuePoint = this.influxEntityConverter.toFundTokenValuePoint(time, fundAddress, valuedTokenQuote);
+                this.influxClient.writePoint(tokenValuePoint);
+            }
+            var fundValuePoint = this.influxEntityConverter.toFundValuePoint(time, fundAddress, valuedTokenQuotes);
+            this.influxClient.writePoint(fundValuePoint);
+        }
+
+        log.info("Loaded {} funds with different {} tokens.", fundAssets.size(), tokenAddresses.size());
     }
 
     private List<String> loadOpenFundAddresses() {
@@ -76,7 +110,7 @@ public class TokenQuotesCronjob extends TimerTask {
         }
     }
 
-    private List<IFund.AssetValue> getFundTokenValues(IFund fund) {
+    private List<IFund.AssetValue> getFundTokenAssets(IFund fund) {
         try {
             return fund.getAssetValues().send();
         } catch (Exception e) {

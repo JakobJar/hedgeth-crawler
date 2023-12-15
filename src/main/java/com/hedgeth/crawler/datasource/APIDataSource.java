@@ -4,6 +4,7 @@ import com.hedgeth.crawler.entity.CurrencyType;
 import com.hedgeth.crawler.entity.TokenQuote;
 
 import java.util.List;
+import java.util.Map;
 
 public interface APIDataSource {
 
@@ -16,9 +17,9 @@ public interface APIDataSource {
 
     List<TokenQuote> getHistoricQuotes(String tokenAddress, long from, long to, CurrencyType currencyType);
 
-    default List<TokenQuote> getCurrentQuotes(List<String> tokenAddresses) {
+    default Map<String, TokenQuote> getCurrentQuotes(List<String> tokenAddresses) {
         return getCurrentQuotes(tokenAddresses, DEFAULT_CURRENCY_TYPE);
     }
 
-    List<TokenQuote> getCurrentQuotes(List<String> tokenAddress, CurrencyType currencyType);
+    Map<String, TokenQuote> getCurrentQuotes(List<String> tokenAddress, CurrencyType currencyType);
 }
