@@ -1,6 +1,7 @@
 package com.hedgeth.crawler.cron;
 
 import com.google.inject.Inject;
+import com.hedgeth.crawler.converter.AddressConverter;
 import com.hedgeth.crawler.converter.InfluxEntityConverter;
 import com.hedgeth.crawler.datasource.APIDataSource;
 import com.hedgeth.crawler.entity.TokenQuote;
@@ -28,12 +29,13 @@ public class TokenQuotesCronjob extends TimerTask {
     private final Web3j web3j;
     private final TransactionManager transactionManager;
     private final ContractGasProvider contractGasProvider;
+    private final AddressConverter addressConverter;
 
     @Inject
     public TokenQuotesCronjob(IFundFactory fundFactory, APIDataSource apiDataSource,
                               InfluxDBClient influxClient, InfluxEntityConverter influxEntityConverter,
                               Web3j web3j, TransactionManager transactionManager,
-                              ContractGasProvider contractGasProvider) {
+                              ContractGasProvider contractGasProvider, AddressConverter addressConverter) {
         this.fundFactory = fundFactory;
         this.apiDataSource = apiDataSource;
         this.influxClient = influxClient.getWriteApiBlocking();
@@ -41,6 +43,7 @@ public class TokenQuotesCronjob extends TimerTask {
         this.web3j = web3j;
         this.transactionManager = transactionManager;
         this.contractGasProvider = contractGasProvider;
+        this.addressConverter = addressConverter;
     }
 
     @Override
@@ -56,8 +59,7 @@ public class TokenQuotesCronjob extends TimerTask {
         // Loading all distinct addresses of tokens that are present in any fund
         List<String> tokenAddresses = fundAssets.values().stream()
                 .flatMap(Collection::stream)
-                .map(assetValue -> assetValue.token)
-                .map(address -> "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
+                .map(assetValue -> this.addressConverter.convert(assetValue.token))
                 .distinct()
                 .toList();
         log.debug("Fetched token addresses: {}", tokenAddresses);
@@ -74,7 +76,7 @@ public class TokenQuotesCronjob extends TimerTask {
             // Converting token values to valued token quotes
             var valuedTokenQuotes = fundTokenAssets.stream()
                     .map(tokenValue -> {
-                        var tokenQuote = tokenQuotes.get("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48");
+                        var tokenQuote = tokenQuotes.get(this.addressConverter.convert(tokenValue.token));
                         var amount = new BigDecimal(tokenValue.value, tokenValue.decimals.intValue());
                         return new ValuedTokenQuote(tokenQuote, amount);
                     })
