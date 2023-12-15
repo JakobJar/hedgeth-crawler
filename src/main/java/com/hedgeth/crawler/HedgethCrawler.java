@@ -30,5 +30,7 @@ public final class HedgethCrawler extends AbstractModule {
         var cronjobTimer = new Timer("cronjob-timer", false);
         var tokenQuotesCronjob = injector.getInstance(TokenQuotesCronjob.class);
         cronjobTimer.scheduleAtFixedRate(tokenQuotesCronjob, 0, 60 * 1000);
+
+        log.info("Hedgeth Crawler successfully started.");
     }
 }

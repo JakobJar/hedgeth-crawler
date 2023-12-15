@@ -91,7 +91,7 @@ public class TokenQuotesCronjob extends TimerTask {
             this.influxClient.writePoint(fundValuePoint);
         }
 
-        log.info("Loaded {} funds with different {} tokens.", fundAssets.size(), tokenAddresses.size());
+        log.info("Loaded {} fund(s) with {} different token(s).", fundAssets.size(), tokenAddresses.size());
     }
 
     private List<String> loadOpenFundAddresses() {
