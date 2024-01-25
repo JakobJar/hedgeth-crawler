@@ -165,12 +165,14 @@ public class IFund extends Contract {
         return investmentEventFlowable(filter);
     }
 
-    public RemoteFunctionCall<TransactionReceipt> swapAssets(byte[] path, BigInteger amountIn, BigInteger amountOutMinimum) {
+    public RemoteFunctionCall<TransactionReceipt> swapAssets(byte[] path, BigInteger amountIn, BigInteger amountOutMinimum, String tokenIn, String tokenOut) {
         final Function function = new Function(
                 FUNC_SWAPASSETS, 
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.DynamicBytes(path), 
                 new org.web3j.abi.datatypes.generated.Uint256(amountIn), 
-                new org.web3j.abi.datatypes.generated.Uint256(amountOutMinimum)), 
+                new org.web3j.abi.datatypes.generated.Uint256(amountOutMinimum), 
+                new org.web3j.abi.datatypes.Address(160, tokenIn), 
+                new org.web3j.abi.datatypes.Address(160, tokenOut)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }

@@ -65,6 +65,16 @@
         "internalType": "uint256",
         "name": "amountOutMinimum",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenIn",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenOut",
+        "type": "address"
       }
     ],
     "name": "swapAssets",
