@@ -87,6 +87,7 @@ public class TokenQuotesCronjob extends TimerTask {
                         var amount = new BigDecimal(tokenValue.value, tokenValue.decimals.intValue());
                         return new ValuedTokenQuote(tokenQuote, amount);
                     })
+                    .filter(Objects::nonNull)
                     .toList();
 
             // Writing token values and fund value to InfluxDB
