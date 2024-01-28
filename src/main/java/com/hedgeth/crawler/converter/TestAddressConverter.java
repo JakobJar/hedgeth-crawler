@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 public class TestAddressConverter implements AddressConverter {
@@ -27,10 +28,12 @@ public class TestAddressConverter implements AddressConverter {
     }
 
     @Override
-    public String convert(String address) {
-        if (!this.mapping.containsKey(address))
+    public Optional<String> convert(String address) {
+        if (!this.mapping.containsKey(address)) {
             log.warn("No mapping found for address {}", address);
-        return this.mapping.getOrDefault(address, address);
+            return Optional.empty();
+        }
+        return Optional.of(this.mapping.get(address));
     }
 
     private Map<String, String> loadMapping() throws IOException, URISyntaxException {

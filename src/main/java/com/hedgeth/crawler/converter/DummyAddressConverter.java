@@ -1,9 +1,11 @@
 package com.hedgeth.crawler.converter;
 
+import java.util.Optional;
+
 public class DummyAddressConverter implements AddressConverter {
 
     @Override
-    public String convert(String address) {
-        return address;
+    public Optional<String> convert(String address) {
+        return Optional.of(address);
     }
 }

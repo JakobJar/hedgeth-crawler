@@ -1,6 +1,8 @@
 package com.hedgeth.crawler.converter;
 
+import java.util.Optional;
+
 public interface AddressConverter {
 
-    String convert(String address);
+    Optional<String> convert(String address);
 }
