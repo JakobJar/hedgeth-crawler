@@ -103,6 +103,7 @@ public class CoinGeckoDataSource implements APIDataSource {
     private HttpRequest.Builder createRequestBuilder(String path) {
         return HttpRequest.newBuilder()
                 .uri(URI.create(COINGECKO_API_URL + path))
-                .header("Content-Type", "application/json");
+                .header("Content-Type", "application/json")
+                .header("x-cg-demo-api-key", this.apiKey);
     }
 }
