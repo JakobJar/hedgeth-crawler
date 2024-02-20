@@ -50,17 +50,20 @@ public class TokenQuotesCronjob extends TimerTask {
     public void run() {
         // Loading all open funds and their token values
         Map<String, List<IFund.AssetValue>> fundAssets = this.loadOpenFundAddresses().stream()
+                .filter(address -> !address.matches("^0x0+$"))
                 .map(this::getFund)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .filter(fund -> !fund.getContractAddress().equals("0x0000000000000000000000000000000000000000"))
+                .filter(fund -> !fund.getContractAddress().matches("^0x0+$"))
                 .collect(Collectors.toMap(IFund::getContractAddress, this::getFundTokenAssets));
 
         // Loading all distinct addresses of tokens that are present in any fund
         List<String> tokenAddresses = fundAssets.values().stream()
                 .flatMap(Collection::stream)
-                .map(assetValue -> this.addressConverter.convert(assetValue.token))
                 .distinct()
+                .map(assetValue -> this.addressConverter.convert(assetValue.token))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .toList();
         log.debug("Fetched token addresses: {}", tokenAddresses);
 
@@ -76,10 +79,15 @@ public class TokenQuotesCronjob extends TimerTask {
             // Converting token values to valued token quotes
             var valuedTokenQuotes = fundTokenAssets.stream()
                     .map(tokenValue -> {
-                        var tokenQuote = tokenQuotes.get(this.addressConverter.convert(tokenValue.token));
+                        var addressOptional = this.addressConverter.convert(tokenValue.token);
+                        if (addressOptional.filter(tokenQuotes::containsKey).isEmpty())
+                            return null;
+
+                        var tokenQuote = tokenQuotes.get(addressOptional.get());
                         var amount = new BigDecimal(tokenValue.value, tokenValue.decimals.intValue());
                         return new ValuedTokenQuote(tokenQuote, amount);
                     })
+                    .filter(Objects::nonNull)
                     .toList();
 
             // Writing token values and fund value to InfluxDB
