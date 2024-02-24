@@ -1,19 +1,10 @@
 package org.web3j.model;
 
 import io.reactivex.Flowable;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Callable;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.DynamicArray;
-import org.web3j.abi.datatypes.Event;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.*;
+import org.web3j.abi.datatypes.generated.Uint16;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
@@ -25,6 +16,13 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * <p>Auto generated code.
@@ -40,6 +38,16 @@ public class IFundFactory extends Contract {
     public static final String BINARY = "Bin file was not provided";
 
     public static final String FUNC_CREATEFUND = "createFund";
+
+    public static final String FUNC_WITHDRAWFEES = "withdrawFees";
+
+    public static final String FUNC_SETINVESTMENTFEE = "setInvestmentFee";
+
+    public static final String FUNC_SETPERFORMANCEFEE = "setPerformanceFee";
+
+    public static final String FUNC_INVESTMENTFEE = "investmentFee";
+
+    public static final String FUNC_PERFORMANCEFEE = "performanceFee";
 
     public static final String FUNC_GETOPENFUNDS = "getOpenFunds";
 
@@ -99,16 +107,53 @@ public class IFundFactory extends Contract {
         return fundCreatedEventFlowable(filter);
     }
 
-    public RemoteFunctionCall<TransactionReceipt> createFund(BigInteger minimumInvestment, BigInteger investmentFee, BigInteger performanceFee, BigInteger fundRaisingClose, BigInteger fundClose) {
+    public RemoteFunctionCall<TransactionReceipt> createFund(BigInteger investmentFee, BigInteger performanceFee, BigInteger fundRaisingClose, BigInteger fundClose) {
         final Function function = new Function(
                 FUNC_CREATEFUND, 
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(minimumInvestment), 
-                new org.web3j.abi.datatypes.generated.Uint16(investmentFee), 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint16(investmentFee), 
                 new org.web3j.abi.datatypes.generated.Uint16(performanceFee), 
                 new org.web3j.abi.datatypes.generated.Uint256(fundRaisingClose), 
                 new org.web3j.abi.datatypes.generated.Uint256(fundClose)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> withdrawFees() {
+        final Function function = new Function(
+                FUNC_WITHDRAWFEES, 
+                Arrays.<Type>asList(), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> setInvestmentFee(BigInteger investmentFee) {
+        final Function function = new Function(
+                FUNC_SETINVESTMENTFEE, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint16(investmentFee)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> setPerformanceFee(BigInteger performanceFee) {
+        final Function function = new Function(
+                FUNC_SETPERFORMANCEFEE, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint16(performanceFee)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<BigInteger> investmentFee() {
+        final Function function = new Function(FUNC_INVESTMENTFEE, 
+                Arrays.<Type>asList(), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint16>() {}));
+        return executeRemoteCallSingleValueReturn(function, BigInteger.class);
+    }
+
+    public RemoteFunctionCall<BigInteger> performanceFee() {
+        final Function function = new Function(FUNC_PERFORMANCEFEE, 
+                Arrays.<Type>asList(), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint16>() {}));
+        return executeRemoteCallSingleValueReturn(function, BigInteger.class);
     }
 
     public RemoteFunctionCall<List> getOpenFunds() {

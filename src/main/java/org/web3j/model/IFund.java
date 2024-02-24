@@ -1,22 +1,9 @@
 package org.web3j.model;
 
 import io.reactivex.Flowable;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Callable;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.DynamicArray;
-import org.web3j.abi.datatypes.DynamicStruct;
-import org.web3j.abi.datatypes.Event;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.StaticStruct;
-import org.web3j.abi.datatypes.Type;
-import org.web3j.abi.datatypes.Utf8String;
+import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.generated.Uint16;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.abi.datatypes.generated.Uint8;
@@ -31,6 +18,13 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * <p>Auto generated code.
@@ -56,8 +50,6 @@ public class IFund extends Contract {
     public static final String FUNC_WITHDRAWFEES = "withdrawFees";
 
     public static final String FUNC_MANAGER = "manager";
-
-    public static final String FUNC_MINIMUMINVESTMENT = "minimumInvestment";
 
     public static final String FUNC_INVESTMENTFEE = "investmentFee";
 
@@ -165,12 +157,14 @@ public class IFund extends Contract {
         return investmentEventFlowable(filter);
     }
 
-    public RemoteFunctionCall<TransactionReceipt> swapAssets(byte[] path, BigInteger amountIn, BigInteger amountOutMinimum) {
+    public RemoteFunctionCall<TransactionReceipt> swapAssets(byte[] path, BigInteger amountIn, BigInteger amountOutMinimum, String tokenIn, String tokenOut) {
         final Function function = new Function(
                 FUNC_SWAPASSETS, 
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.DynamicBytes(path), 
                 new org.web3j.abi.datatypes.generated.Uint256(amountIn), 
-                new org.web3j.abi.datatypes.generated.Uint256(amountOutMinimum)), 
+                new org.web3j.abi.datatypes.generated.Uint256(amountOutMinimum), 
+                new org.web3j.abi.datatypes.Address(160, tokenIn), 
+                new org.web3j.abi.datatypes.Address(160, tokenOut)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
@@ -212,13 +206,6 @@ public class IFund extends Contract {
                 Arrays.<Type>asList(), 
                 Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}));
         return executeRemoteCallSingleValueReturn(function, String.class);
-    }
-
-    public RemoteFunctionCall<BigInteger> minimumInvestment() {
-        final Function function = new Function(FUNC_MINIMUMINVESTMENT, 
-                Arrays.<Type>asList(), 
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
-        return executeRemoteCallSingleValueReturn(function, BigInteger.class);
     }
 
     public RemoteFunctionCall<BigInteger> investmentFee() {
