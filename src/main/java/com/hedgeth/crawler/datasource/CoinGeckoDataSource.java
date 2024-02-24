@@ -93,7 +93,7 @@ public class CoinGeckoDataSource implements APIDataSource {
             var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() / 100 == 2)
                 return Optional.of(response.body());
-            log.error("Error while sending request: " + response.body());
+            log.error("Error response received: " + response.body());
         } catch (IOException | InterruptedException e) {
             log.error("Error while sending request", e);
         }
@@ -103,6 +103,7 @@ public class CoinGeckoDataSource implements APIDataSource {
     private HttpRequest.Builder createRequestBuilder(String path) {
         return HttpRequest.newBuilder()
                 .uri(URI.create(COINGECKO_API_URL + path))
-                .header("Content-Type", "application/json");
+                .header("Content-Type", "application/json")
+                .header("x-cg-demo-api-key", this.apiKey);
     }
 }
